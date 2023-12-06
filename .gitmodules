@@ -1,0 +1,3 @@
+[submodule "modules/many_bone_ik"]
+	path = modules/many_bone_ik
+	url = https://github.com/V-Sekai/many_bone_ik
