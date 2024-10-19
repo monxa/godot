@@ -42,12 +42,21 @@ private:
 	Data *data = nullptr;
 
 public:
-	~ResourceDuplicationRemap();
 
 	bool has(const Ref<Resource> &p_key) const;
 	Ref<Resource> get(const Ref<Resource> &p_key) const;
 
 	void insert(const Ref<Resource> &p_key, const Ref<Resource> &p_value);
+	
+	ResourceDuplicationRemap() = default;
+	~ResourceDuplicationRemap();
+ 	
+	// rule of 5
+    ResourceDuplicationRemap(const ResourceDuplicationRemap &other) noexcept;
+    ResourceDuplicationRemap &operator=(const ResourceDuplicationRemap &other) noexcept;
+    ResourceDuplicationRemap(ResourceDuplicationRemap &&other) noexcept;
+    ResourceDuplicationRemap &operator=(ResourceDuplicationRemap &&other) noexcept;
+
 };
 
 #endif // RESOURCE_DUPLICATION_REMAP_H

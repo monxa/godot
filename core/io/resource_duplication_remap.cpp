@@ -38,12 +38,6 @@ struct ResourceDuplicationRemap::Data {
 	HashMap<Ref<Resource>, Ref<Resource>> remap;
 };
 
-ResourceDuplicationRemap::~ResourceDuplicationRemap() {
-	if (data != nullptr) {
-		memdelete(data);
-	}
-}
-
 bool ResourceDuplicationRemap::has(const Ref<Resource> &p_key) const {
 	return data->remap.has(p_key);
 }
@@ -56,4 +50,53 @@ void ResourceDuplicationRemap::insert(const Ref<Resource> &p_key, const Ref<Reso
 		data = memnew(Data);
 	}
 	data->remap.insert(p_key, p_value);
+}
+
+ResourceDuplicationRemap::~ResourceDuplicationRemap() {
+	if (data != nullptr) {
+		memdelete(data);
+	}
+}
+// Move Constructor
+ResourceDuplicationRemap::ResourceDuplicationRemap(ResourceDuplicationRemap &&other) noexcept {
+	data = other.data;
+	other.data = nullptr;
+}
+
+// Move Assignment Operator
+ResourceDuplicationRemap &ResourceDuplicationRemap::operator=(ResourceDuplicationRemap &&other) noexcept {
+	if (this != &other) {
+		// Delete current data
+		if (data != nullptr) {
+			memdelete(data);
+		}
+		// Transfer ownership from other to this
+		data = other.data;
+		other.data = nullptr;
+	}
+	return *this;
+}
+
+// Copy Constructor
+ResourceDuplicationRemap::ResourceDuplicationRemap(const ResourceDuplicationRemap &other) noexcept {
+	if (other.data != nullptr) {
+		data = memnew(Data(*other.data));
+	} else {
+		data = nullptr;
+	}
+}
+
+// Copy Assignment Operator
+ResourceDuplicationRemap &ResourceDuplicationRemap::operator=(const ResourceDuplicationRemap &other) noexcept {
+	if (this != &other) {
+		if (data != nullptr) {
+			memdelete(data);
+		}
+		if (other.data != nullptr) {
+			data = memnew(Data(*other.data));
+		} else {
+			data = nullptr;
+		}
+	}
+	return *this;
 }
