@@ -38,12 +38,10 @@ struct ResourceDuplicationRemap::Data {
 	HashMap<Ref<Resource>, Ref<Resource>> remap;
 };
 
-ResourceDuplicationRemap::ResourceDuplicationRemap() {
-	data = memnew(Data);
-}
-
 ResourceDuplicationRemap::~ResourceDuplicationRemap() {
-	memdelete(data);
+	if (data != nullptr) {
+		memdelete(data);
+	}
 }
 
 bool ResourceDuplicationRemap::has(const Ref<Resource> &p_key) const {
@@ -54,5 +52,8 @@ Ref<Resource> ResourceDuplicationRemap::get(const Ref<Resource> &p_key) const {
 }
 
 void ResourceDuplicationRemap::insert(const Ref<Resource> &p_key, const Ref<Resource> &p_value) {
+	if (data == nullptr) {
+		data = memnew(Data);
+	}
 	data->remap.insert(p_key, p_value);
 }

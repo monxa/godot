@@ -39,10 +39,9 @@ class Resource;
 class ResourceDuplicationRemap {
 private:
 	struct Data;
-	Data *data;
+	Data *data = nullptr;
 
 public:
-	ResourceDuplicationRemap();
 	~ResourceDuplicationRemap();
 
 	bool has(const Ref<Resource> &p_key) const;
