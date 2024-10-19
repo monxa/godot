@@ -30,6 +30,7 @@
 
 #include "dictionary.h"
 
+#include "core/io/resource_duplication_remap.h"
 #include "core/templates/hash_map.h"
 #include "core/templates/safe_refcount.h"
 #include "core/variant/container_type_validate.h"
@@ -559,7 +560,8 @@ const Variant *Dictionary::next(const Variant *p_key) const {
 }
 
 Dictionary Dictionary::duplicate(bool p_deep) const {
-	return recursive_duplicate(p_deep, 0);
+	ResourceDuplicationRemap remap;
+	return recursive_duplicate(p_deep, 0, remap);
 }
 
 void Dictionary::make_read_only() {
@@ -571,7 +573,7 @@ bool Dictionary::is_read_only() const {
 	return _p->read_only != nullptr;
 }
 
-Dictionary Dictionary::recursive_duplicate(bool p_deep, int recursion_count) const {
+Dictionary Dictionary::recursive_duplicate(bool p_deep, int recursion_count, ResourceDuplicationRemap &p_remap) const {
 	Dictionary n;
 	n._p->typed_key = _p->typed_key;
 	n._p->typed_value = _p->typed_value;
@@ -584,7 +586,7 @@ Dictionary Dictionary::recursive_duplicate(bool p_deep, int recursion_count) con
 	if (p_deep) {
 		recursion_count++;
 		for (const KeyValue<Variant, Variant> &E : _p->variant_map) {
-			n[E.key.recursive_duplicate(true, recursion_count)] = E.value.recursive_duplicate(true, recursion_count);
+			n[E.key.recursive_duplicate(true, recursion_count, p_remap)] = E.value.recursive_duplicate(true, recursion_count, p_remap);
 		}
 	} else {
 		for (const KeyValue<Variant, Variant> &E : _p->variant_map) {

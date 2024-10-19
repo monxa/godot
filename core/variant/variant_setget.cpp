@@ -30,6 +30,9 @@
 
 #include "variant_setget.h"
 
+#include "core/io/resource.h"
+#include "core/io/resource_duplication_remap.h"
+#include "core/object/ref_counted.h"
 #include "variant_callable.h"
 
 struct VariantSetterGetterInfo {
@@ -1930,26 +1933,25 @@ Variant Variant::iter_get(const Variant &r_iter, bool &r_valid) const {
 }
 
 Variant Variant::duplicate(bool p_deep) const {
-	return recursive_duplicate(p_deep, 0);
+	ResourceDuplicationRemap remap;
+	return recursive_duplicate(p_deep, 0, remap);
 }
 
-Variant Variant::recursive_duplicate(bool p_deep, int recursion_count) const {
+Variant Variant::recursive_duplicate(bool p_deep, int recursion_count, ResourceDuplicationRemap &p_remap) const {
 	switch (type) {
 		case OBJECT: {
-			/*  breaks stuff :(
-			if (p_deep && !_get_obj().ref.is_null()) {
-				Ref<Resource> resource = _get_obj().ref;
+			if (p_deep && _get_obj().obj != nullptr) {
+				Ref<Resource> resource = Ref<Resource>(get_validated_object());
 				if (resource.is_valid()) {
-					return resource->duplicate(true);
+					return resource->recursive_duplicate(p_deep, recursion_count, p_remap);
 				}
 			}
-			*/
 			return *this;
 		} break;
 		case DICTIONARY:
-			return operator Dictionary().recursive_duplicate(p_deep, recursion_count);
+			return operator Dictionary().recursive_duplicate(p_deep, recursion_count, p_remap);
 		case ARRAY:
-			return operator Array().recursive_duplicate(p_deep, recursion_count);
+			return operator Array().recursive_duplicate(p_deep, recursion_count, p_remap);
 		case PACKED_BYTE_ARRAY:
 			return operator Vector<uint8_t>().duplicate();
 		case PACKED_INT32_ARRAY:

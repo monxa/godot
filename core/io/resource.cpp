@@ -31,6 +31,7 @@
 #include "resource.h"
 
 #include "core/io/file_access.h"
+#include "core/io/resource_duplication_remap.h"
 #include "core/io/resource_loader.h"
 #include "core/math/math_funcs.h"
 #include "core/object/script_language.h"
@@ -372,12 +373,18 @@ void Resource::configure_for_local_scene(Node *p_for_scene, HashMap<Ref<Resource
 }
 
 Ref<Resource> Resource::duplicate(bool p_subresources) const {
+	ResourceDuplicationRemap remap;
+	return recursive_duplicate(p_subresources, 0, remap);
+}
+
+Ref<Resource> Resource::recursive_duplicate(bool p_subresources, int recursion_count, ResourceDuplicationRemap &p_remap) const {
 	List<PropertyInfo> plist;
 	get_property_list(&plist);
 
 	Ref<Resource> r = static_cast<Resource *>(ClassDB::instantiate(get_class()));
 	ERR_FAIL_COND_V(r.is_null(), Ref<Resource>());
 
+	p_remap.insert(Ref<Resource>(this), r);
 	for (const PropertyInfo &E : plist) {
 		if (!(E.usage & PROPERTY_USAGE_STORAGE)) {
 			continue;
@@ -397,13 +404,17 @@ Ref<Resource> Resource::duplicate(bool p_subresources) const {
 			case Variant::Type::PACKED_VECTOR2_ARRAY:
 			case Variant::Type::PACKED_VECTOR3_ARRAY:
 			case Variant::Type::PACKED_VECTOR4_ARRAY: {
-				r->set(E.name, p.duplicate(p_subresources));
+				r->set(E.name, p.recursive_duplicate(p_subresources, recursion_count, p_remap));
 			} break;
 
 			case Variant::Type::OBJECT: {
 				if (!(E.usage & PROPERTY_USAGE_NEVER_DUPLICATE) && (p_subresources || (E.usage & PROPERTY_USAGE_ALWAYS_DUPLICATE))) {
 					Ref<Resource> sr = p;
 					if (sr.is_valid()) {
+						if (p_remap.has(sr)) {
+							r->set(E.name, p_remap.get(sr));
+							continue;
+						}
 						r->set(E.name, sr->duplicate(p_subresources));
 					}
 				} else {

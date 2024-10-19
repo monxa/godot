@@ -66,6 +66,7 @@ class RefCounted;
 
 template <typename T>
 class Ref;
+class ResourceDuplicationRemap;
 
 struct PropertyInfo;
 struct MethodInfo;
@@ -578,7 +579,7 @@ public:
 
 	void zero();
 	Variant duplicate(bool p_deep = false) const;
-	Variant recursive_duplicate(bool p_deep, int recursion_count) const;
+	Variant recursive_duplicate(bool p_deep, int recursion_count, ResourceDuplicationRemap &p_remap) const;
 
 	/* Built-In Methods */
 

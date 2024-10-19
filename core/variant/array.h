@@ -40,6 +40,7 @@ class ArrayPrivate;
 class Object;
 class StringName;
 class Callable;
+class ResourceDuplicationRemap;
 
 class Array {
 	mutable ArrayPrivate *_p;
@@ -166,7 +167,7 @@ public:
 	Variant pop_at(int p_pos);
 
 	Array duplicate(bool p_deep = false) const;
-	Array recursive_duplicate(bool p_deep, int recursion_count) const;
+	Array recursive_duplicate(bool p_deep, int recursion_count, ResourceDuplicationRemap &p_remap) const;
 
 	Array slice(int p_begin, int p_end = INT_MAX, int p_step = 1, bool p_deep = false) const;
 	Array filter(const Callable &p_callable) const;

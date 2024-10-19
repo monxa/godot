@@ -39,6 +39,7 @@
 #include "core/templates/self_list.h"
 
 class Node;
+class ResourceDuplicationRemap;
 
 #define RES_BASE_EXTENSION(m_ext)                                                                                   \
 public:                                                                                                             \
@@ -120,6 +121,7 @@ public:
 	String get_scene_unique_id() const;
 
 	virtual Ref<Resource> duplicate(bool p_subresources = false) const;
+	Ref<Resource> recursive_duplicate(bool p_subresources, int recursion_count, ResourceDuplicationRemap &p_remap) const;
 	Ref<Resource> duplicate_for_local_scene(Node *p_for_scene, HashMap<Ref<Resource>, Ref<Resource>> &p_remap_cache);
 	void configure_for_local_scene(Node *p_for_scene, HashMap<Ref<Resource>, Ref<Resource>> &p_remap_cache);
 

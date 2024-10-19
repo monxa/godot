@@ -36,7 +36,7 @@
 #include "core/variant/array.h"
 
 class Variant;
-
+class ResourceDuplicationRemap;
 struct DictionaryPrivate;
 
 class Dictionary {
@@ -89,7 +89,7 @@ public:
 	Array values() const;
 
 	Dictionary duplicate(bool p_deep = false) const;
-	Dictionary recursive_duplicate(bool p_deep, int recursion_count) const;
+	Dictionary recursive_duplicate(bool p_deep, int recursion_count, ResourceDuplicationRemap &p_remap) const;
 
 	void set_typed(uint32_t p_key_type, const StringName &p_key_class_name, const Variant &p_key_script, uint32_t p_value_type, const StringName &p_value_class_name, const Variant &p_value_script);
 	bool is_typed() const;

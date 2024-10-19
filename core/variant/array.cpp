@@ -31,6 +31,8 @@
 #include "array.h"
 
 #include "container_type_validate.h"
+#include "core/io/resource.h"
+#include "core/io/resource_duplication_remap.h"
 #include "core/math/math_funcs.h"
 #include "core/object/class_db.h"
 #include "core/object/script_language.h"
@@ -499,10 +501,11 @@ const Variant &Array::get(int p_idx) const {
 }
 
 Array Array::duplicate(bool p_deep) const {
-	return recursive_duplicate(p_deep, 0);
+	ResourceDuplicationRemap remap;
+	return recursive_duplicate(p_deep, 0, remap);
 }
 
-Array Array::recursive_duplicate(bool p_deep, int recursion_count) const {
+Array Array::recursive_duplicate(bool p_deep, int recursion_count, ResourceDuplicationRemap &p_remap) const {
 	Array new_arr;
 	new_arr._p->typed = _p->typed;
 
@@ -516,7 +519,7 @@ Array Array::recursive_duplicate(bool p_deep, int recursion_count) const {
 		int element_count = size();
 		new_arr.resize(element_count);
 		for (int i = 0; i < element_count; i++) {
-			new_arr[i] = get(i).recursive_duplicate(true, recursion_count);
+			new_arr[i] = get(i).recursive_duplicate(true, recursion_count, p_remap);
 		}
 	} else {
 		new_arr._p->array = _p->array;
