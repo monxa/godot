@@ -30,6 +30,7 @@
 
 #include "resource.h"
 
+#include "core/error/error_macros.h"
 #include "core/io/file_access.h"
 #include "core/io/resource_duplication_remap.h"
 #include "core/io/resource_loader.h"
@@ -378,7 +379,6 @@ Ref<Resource> Resource::duplicate(bool p_subresources) const {
 	return recursive_duplicate(p_subresources, 0, remap);
 }
 
-
 Ref<Resource> Resource::recursive_duplicate(bool p_subresources, int recursion_count, ResourceDuplicationRemap &p_remap) const {
 	if (recursion_count > MAX_RECURSION) {
 		ERR_PRINT("Max recursion reached");
@@ -391,7 +391,6 @@ Ref<Resource> Resource::recursive_duplicate(bool p_subresources, int recursion_c
 
 	Ref<Resource> r = static_cast<Resource *>(ClassDB::instantiate(get_class()));
 	ERR_FAIL_COND_V(r.is_null(), Ref<Resource>());
-
 	p_remap.insert(Ref<Resource>(this), r);
 	for (const PropertyInfo &E : plist) {
 		if (!(E.usage & PROPERTY_USAGE_STORAGE)) {
@@ -416,18 +415,26 @@ Ref<Resource> Resource::recursive_duplicate(bool p_subresources, int recursion_c
 			} break;
 
 			case Variant::Type::OBJECT: {
-				if (!(E.usage & PROPERTY_USAGE_NEVER_DUPLICATE) && (p_subresources || (E.usage & PROPERTY_USAGE_ALWAYS_DUPLICATE))) {
-					Ref<Resource> sr = p;
-					if (sr.is_valid()) {
-						if (p_remap.has(sr)) {
-							r->set(E.name, p_remap.get(sr));
-							continue;
-						}
-						r->set(E.name, sr->recursive_duplicate(p_subresources, recursion_count, p_remap));
-					}
-				} else {
+				if ((E.usage & PROPERTY_USAGE_NEVER_DUPLICATE) || (!p_subresources && !(E.usage & PROPERTY_USAGE_ALWAYS_DUPLICATE))) {
 					r->set(E.name, p);
+					continue;
 				}
+				Ref<Resource> sr = p;
+				if (!sr.is_valid()) {
+					// empty property
+					r->set(E.name, p);
+					continue;
+				}
+				// don't duplicate shader code recursively
+				if (sr->get_class() == "Shader") {
+					r->set(E.name, sr);
+					continue;
+				}
+				if (p_remap.has(sr)) {
+					r->set(E.name, p_remap.get(sr));
+					continue;
+				}
+				r->set(E.name, sr->recursive_duplicate(p_subresources, recursion_count, p_remap));
 			} break;
 
 			default: {
