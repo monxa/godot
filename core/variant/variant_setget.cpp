@@ -1940,11 +1940,9 @@ Variant Variant::duplicate(bool p_deep) const {
 Variant Variant::recursive_duplicate(bool p_deep, int recursion_count, ResourceDuplicationRemap &p_remap) const {
 	switch (type) {
 		case OBJECT: {
-			if (p_deep && _get_obj().obj != nullptr) {
-				Ref<Resource> resource = Ref<Resource>(get_validated_object());
-				if (resource.is_valid()) {
-					return resource->recursive_duplicate(p_deep, recursion_count, p_remap);
-				}
+			Ref<Resource> resource = Ref<Resource>(_get_obj().obj);
+			if (resource.is_valid()) {
+				return resource->recursive_duplicate(p_deep, recursion_count, p_remap);
 			}
 			return *this;
 		} break;

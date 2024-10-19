@@ -36,6 +36,7 @@
 #include "core/math/math_funcs.h"
 #include "core/object/script_language.h"
 #include "core/os/os.h"
+#include "core/typedefs.h"
 #include "scene/main/node.h" //only so casting works
 
 #include <stdio.h>
@@ -378,6 +379,11 @@ Ref<Resource> Resource::duplicate(bool p_subresources) const {
 }
 
 Ref<Resource> Resource::recursive_duplicate(bool p_subresources, int recursion_count, ResourceDuplicationRemap &p_remap) const {
+	if (recursion_count > MAX_RECURSION) {
+		ERR_PRINT("Max recursion reached");
+		return Ref<Resource>();
+	}
+
 	List<PropertyInfo> plist;
 	get_property_list(&plist);
 
