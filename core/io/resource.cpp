@@ -378,11 +378,13 @@ Ref<Resource> Resource::duplicate(bool p_subresources) const {
 	return recursive_duplicate(p_subresources, 0, remap);
 }
 
+
 Ref<Resource> Resource::recursive_duplicate(bool p_subresources, int recursion_count, ResourceDuplicationRemap &p_remap) const {
 	if (recursion_count > MAX_RECURSION) {
 		ERR_PRINT("Max recursion reached");
 		return Ref<Resource>();
 	}
+	++recursion_count;
 
 	List<PropertyInfo> plist;
 	get_property_list(&plist);
@@ -421,7 +423,7 @@ Ref<Resource> Resource::recursive_duplicate(bool p_subresources, int recursion_c
 							r->set(E.name, p_remap.get(sr));
 							continue;
 						}
-						r->set(E.name, sr->duplicate(p_subresources));
+						r->set(E.name, sr->recursive_duplicate(p_subresources, recursion_count, p_remap));
 					}
 				} else {
 					r->set(E.name, p);
