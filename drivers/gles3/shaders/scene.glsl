@@ -1309,7 +1309,7 @@ void light_compute(vec3 N, vec3 L, vec3 V, float A, vec3 light_color, bool is_di
 		float clearcoat, float clearcoat_roughness, vec3 vertex_normal,
 #endif
 #ifdef LIGHT_ANISOTROPY_USED
-		vec3 B, vec3 T, float anisotropy,
+		vec3 T, vec3 B, float anisotropy,
 #endif
 		inout vec3 diffuse_light, inout vec3 specular_light) {
 
@@ -1402,9 +1402,14 @@ void light_compute(vec3 N, vec3 L, vec3 V, float A, vec3 light_color, bool is_di
 		// shlick+ggx as default
 		float alpha_ggx = roughness * roughness;
 #if defined(LIGHT_ANISOTROPY_USED)
-		float aspect = sqrt(1.0 - anisotropy * 0.9);
+		float aspect = sqrt(1.0 - abs(anisotropy) * 0.9);
 		float ax = alpha_ggx / aspect;
 		float ay = alpha_ggx * aspect;
+		if (anisotropy < 0.0) {
+			float atemp = ax;
+			ax = ay;
+			ay = atemp;
+		}
 		float XdotH = dot(T, H);
 		float YdotH = dot(B, H);
 		float D = D_GGX_anisotropic(cNdotH, ax, ay, XdotH, YdotH);
@@ -1473,7 +1478,7 @@ void light_process_omni(uint idx, vec3 vertex, vec3 eye_vec, vec3 normal, vec3 f
 		float clearcoat, float clearcoat_roughness, vec3 vertex_normal,
 #endif
 #ifdef LIGHT_ANISOTROPY_USED
-		vec3 binormal, vec3 tangent, float anisotropy,
+		vec3 tangent, vec3 binormal, float anisotropy,
 #endif
 		inout vec3 diffuse_light, inout vec3 specular_light) {
 	vec3 light_rel_vec = omni_lights[idx].position - vertex;
@@ -1500,7 +1505,7 @@ void light_process_omni(uint idx, vec3 vertex, vec3 eye_vec, vec3 normal, vec3 f
 			clearcoat, clearcoat_roughness, vertex_normal,
 #endif
 #ifdef LIGHT_ANISOTROPY_USED
-			binormal, tangent, anisotropy,
+			tangent, binormal, anisotropy,
 #endif
 			diffuse_light,
 			specular_light);
@@ -1519,7 +1524,7 @@ void light_process_spot(uint idx, vec3 vertex, vec3 eye_vec, vec3 normal, vec3 f
 		float clearcoat, float clearcoat_roughness, vec3 vertex_normal,
 #endif
 #ifdef LIGHT_ANISOTROPY_USED
-		vec3 binormal, vec3 tangent, float anisotropy,
+		vec3 tangent, vec3 binormal, float anisotropy,
 #endif
 		inout vec3 diffuse_light,
 		inout vec3 specular_light) {
@@ -1556,7 +1561,7 @@ void light_process_spot(uint idx, vec3 vertex, vec3 eye_vec, vec3 normal, vec3 f
 			clearcoat, clearcoat_roughness, vertex_normal,
 #endif
 #ifdef LIGHT_ANISOTROPY_USED
-			binormal, tangent, anisotropy,
+			tangent, binormal, anisotropy,
 #endif
 			diffuse_light, specular_light);
 }
@@ -1941,14 +1946,17 @@ void main() {
 #endif // NORMAL_MAP_USED
 
 #ifdef LIGHT_ANISOTROPY_USED
+	// Tangent basis must be reconstructed from per-pixel normal and normalized, otherwise specular highlights become warped.
+	// This has the added benefit of allowing normal maps to affect anisotropic specularity.
+	tangent = normalize(cross(binormal, normal));
+	binormal = cross(normal, tangent); // No need to normalize, as the cross product of two orthogonal normalized vectors is itself normalized.
 
-	if (anisotropy > 0.01) {
-		mat3 rot = mat3(normalize(tangent), normalize(binormal), normal);
-		// Make local to space.
-		tangent = normalize(rot * vec3(anisotropy_flow.x, anisotropy_flow.y, 0.0));
-		binormal = normalize(rot * vec3(-anisotropy_flow.y, anisotropy_flow.x, 0.0));
+	if (abs(anisotropy) > 0.01) { // Make anisotropic basis local to view space.
+		mat3 rot = mat3(tangent, binormal, normal);
+		anisotropy_flow = normalize(anisotropy_flow);
+		tangent = rot * vec3(anisotropy_flow.x, anisotropy_flow.y, 0.0);
+		binormal = rot * vec3(-anisotropy_flow.y, anisotropy_flow.x, 0.0);
 	}
-
 #endif
 
 #ifndef MODE_RENDER_DEPTH
@@ -1994,7 +2002,7 @@ void main() {
 		vec3 anisotropic_direction = anisotropy >= 0.0 ? binormal : tangent;
 		vec3 anisotropic_tangent = cross(anisotropic_direction, view);
 		vec3 anisotropic_normal = cross(anisotropic_tangent, anisotropic_direction);
-		vec3 bent_normal = normalize(mix(normal, anisotropic_normal, abs(anisotropy) * clamp(5.0 * roughness, 0.0, 1.0)));
+		vec3 bent_normal = normalize(mix(normal, anisotropic_normal, abs(anisotropy) * 0.75 * clamp(5.0 * roughness, 0.0, 1.0)));
 		vec3 ref_vec = reflect(-view, bent_normal);
 #else
 		vec3 ref_vec = reflect(-view, normal);
@@ -2179,8 +2187,7 @@ void main() {
 				clearcoat, clearcoat_roughness, geo_normal,
 #endif // LIGHT_CLEARCOAT_USED
 #ifdef LIGHT_ANISOTROPY_USED
-				binormal,
-				tangent, anisotropy,
+				tangent, binormal, anisotropy,
 #endif
 				diffuse_light,
 				specular_light);
@@ -2205,7 +2212,7 @@ void main() {
 				clearcoat, clearcoat_roughness, geo_normal,
 #endif // LIGHT_CLEARCOAT_USED
 #ifdef LIGHT_ANISOTROPY_USED
-				binormal, tangent, anisotropy,
+				tangent, binormal, anisotropy,
 #endif
 				diffuse_light, specular_light);
 	}
@@ -2229,8 +2236,7 @@ void main() {
 				clearcoat, clearcoat_roughness, geo_normal,
 #endif // LIGHT_CLEARCOAT_USED
 #ifdef LIGHT_ANISOTROPY_USED
-				tangent,
-				binormal, anisotropy,
+				tangent, binormal, anisotropy,
 #endif
 				diffuse_light, specular_light);
 	}
@@ -2489,8 +2495,7 @@ void main() {
 			clearcoat, clearcoat_roughness, geo_normal,
 #endif // LIGHT_CLEARCOAT_USED
 #ifdef LIGHT_ANISOTROPY_USED
-			binormal,
-			tangent, anisotropy,
+			tangent, binormal, anisotropy,
 #endif
 			diffuse_light,
 			specular_light);
@@ -2522,7 +2527,7 @@ void main() {
 			clearcoat, clearcoat_roughness, geo_normal,
 #endif // LIGHT_CLEARCOAT_USED
 #ifdef LIGHT_ANISOTROPY_USED
-			binormal, tangent, anisotropy,
+			tangent, binormal, anisotropy,
 #endif
 			diffuse_light, specular_light);
 #else
@@ -2552,8 +2557,7 @@ void main() {
 			clearcoat, clearcoat_roughness, geo_normal,
 #endif // LIGHT_RIM_USED
 #ifdef LIGHT_ANISOTROPY_USED
-			tangent,
-			binormal, anisotropy,
+			tangent, binormal, anisotropy,
 #endif
 			diffuse_light, specular_light);
 #else
