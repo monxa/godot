@@ -378,6 +378,15 @@ FindInFilesDialog::FindInFilesDialog() {
 		gc->add_child(hbc);
 	}
 
+	Label *exclude_label = memnew(Label);
+	exclude_label->set_text(TTR("Exclude:"));
+	exclude_label->set_tooltip_text("Exclude the files matching the following regex.");
+	gc->add_child(exclude_label);
+	
+	_exclude_regex_line_edit = memnew(LineEdit);
+	_folder_line_edit->set_h_size_flags(Control::SIZE_EXPAND_FILL);
+	gc->add_child(_exclude_regex_line_edit);
+
 	Label *filter_label = memnew(Label);
 	filter_label->set_text(TTR("Filters:"));
 	filter_label->set_tooltip_text(TTR("Include the files with the following extensions. Add or remove them in ProjectSettings."));

@@ -107,7 +107,7 @@ public:
 
 	void set_search_text(const String &text);
 	void set_replace_text(const String &text);
-
+	
 	void set_find_in_files_mode(FindInFilesMode p_mode);
 
 	String get_search_text() const;
@@ -140,6 +140,7 @@ private:
 	LineEdit *_folder_line_edit = nullptr;
 	CheckBox *_match_case_checkbox = nullptr;
 	CheckBox *_whole_words_checkbox = nullptr;
+	LineEdit *_exclude_regex_line_edit = nullptr;
 	Button *_find_button = nullptr;
 	Button *_replace_button = nullptr;
 	FileDialog *_folder_dialog = nullptr;
