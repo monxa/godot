@@ -1477,7 +1477,7 @@ VersionControlEditorPlugin::VersionControlEditorPlugin() {
 
 	version_control_dock = memnew(VBoxContainer);
 	version_control_dock->set_v_size_flags(Control::SIZE_EXPAND_FILL);
-	version_control_dock->set_custom_minimum_size(Size2(0, 300) * EDSCALE);
+	version_control_dock->set_custom_minimum_size(Size2(0, 80) * EDSCALE);
 	version_control_dock->hide();
 
 	HBoxContainer *diff_heading = memnew(HBoxContainer);

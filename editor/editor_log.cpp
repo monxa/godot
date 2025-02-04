@@ -443,7 +443,7 @@ EditorLog::EditorLog() {
 	HBoxContainer *hb = this;
 
 	VBoxContainer *vb_left = memnew(VBoxContainer);
-	vb_left->set_custom_minimum_size(Size2(0, 180) * EDSCALE);
+	vb_left->set_custom_minimum_size(Size2(0, 80) * EDSCALE);
 	vb_left->set_v_size_flags(SIZE_EXPAND_FILL);
 	vb_left->set_h_size_flags(SIZE_EXPAND_FILL);
 	hb->add_child(vb_left);
@@ -471,7 +471,7 @@ EditorLog::EditorLog() {
 	search_box->connect(SceneStringName(text_changed), callable_mp(this, &EditorLog::_search_changed));
 	vb_left->add_child(search_box);
 
-	VBoxContainer *vb_right = memnew(VBoxContainer);
+	VFlowContainer *vb_right = memnew(VFlowContainer);
 	hb->add_child(vb_right);
 
 	// Tools grid
